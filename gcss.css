@@ -201,7 +201,6 @@ body {
   cursor: not-allowed;
 }
 
-/* Game Over */
 #game-over {
   padding: 2rem;
   text-align: center;

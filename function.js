@@ -1,5 +1,3 @@
-// This handles the quiz logic and interacts with mcq.js
-
 const quizData = window.quizData;
 
 let currentCategory = "";
@@ -8,8 +6,9 @@ let currentQuestionIndex = 0;
 let tries = 3;
 let streak = 0;
 let consecutiveCorrect = 0;
-const maxLives = 3;
 
+const maxLives = 3;
+const questionNumberEl = document.getElementById("questionNumber");
 const questionEl = document.getElementById("questionBox");
 const choicesEl = document.getElementById("choicesContainer");
 const streakCountEl = document.getElementById("streakBar");
@@ -23,7 +22,6 @@ livesCountEl.textContent = `Lives: ${tries}`;
 livesCountEl.classList.add("score");
 document.querySelector(".header").appendChild(livesCountEl);
 
-// --- Category Selection ---
 document.querySelectorAll(".category-btn").forEach((button) => {
   button.addEventListener("click", () => {
     document
@@ -86,21 +84,32 @@ function startQuiz() {
 function generateQuestion() {
   if (!currentCategory || !currentSubcategory) return;
 
-  const questionData =
-    quizData[currentCategory][currentSubcategory][currentQuestionIndex];
+  const questions = quizData[currentCategory][currentSubcategory];
+
+  const questionData = questions[Math.floor(Math.random() * questions.length)];
 
   questionEl.textContent = questionData.question;
-  const answers = new Set(questionData.options);
+
+  const shuffledOptions = [...questionData.options];
+  for (let i = shuffledOptions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledOptions[i], shuffledOptions[j]] = [
+      shuffledOptions[j],
+      shuffledOptions[i],
+    ];
+  }
+
   const correctAnswer = questionData.correctAnswer;
 
   choicesEl.innerHTML = "";
-  answers.forEach((answer) => {
+  shuffledOptions.forEach((answer) => {
     const btn = document.createElement("button");
     btn.classList.add("choice-btn");
     btn.textContent = answer;
     btn.onclick = () => handleAnswer(answer === correctAnswer, btn);
     choicesEl.appendChild(btn);
   });
+  updateUI();
 }
 
 function handleAnswer(isCorrect, btn) {
@@ -153,6 +162,7 @@ function updateUI() {
   streakCountEl.style.width = `${(streak / 10) * 100}%`;
   scoreEl.textContent = `Score: ${streak}`;
   livesCountEl.textContent = `Lives: ${tries}`;
+  questionNumberEl.textContent = `Question ${currentQuestionIndex + 1}`;
 }
 
 function resetGame() {
