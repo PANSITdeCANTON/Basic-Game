@@ -1,4 +1,4 @@
-// This handles the quiz logic and interacts with mcq.js 
+// This handles the quiz logic and interacts with mcq.js
 
 const quizData = window.quizData;
 
@@ -23,12 +23,12 @@ livesCountEl.textContent = `Lives: ${tries}`;
 livesCountEl.classList.add("score");
 document.querySelector(".header").appendChild(livesCountEl);
 
-
-
 // --- Category Selection ---
 document.querySelectorAll(".category-btn").forEach((button) => {
   button.addEventListener("click", () => {
-    document.querySelectorAll(".category-btn").forEach((b) => b.classList.remove("selected"));
+    document
+      .querySelectorAll(".category-btn")
+      .forEach((b) => b.classList.remove("selected"));
     button.classList.add("selected");
 
     currentCategory = button.getAttribute("data-category");
@@ -38,7 +38,6 @@ document.querySelectorAll(".category-btn").forEach((button) => {
   });
 });
 
-// --- Load Subcategories as buttons ---
 function loadSubcategories() {
   const subcategories = {
     Math: ["Addition", "Subtraction", "Multiplication", "Division"],
@@ -54,7 +53,9 @@ function loadSubcategories() {
     btn.classList.add("subcategory-btn");
     btn.textContent = sub;
     btn.onclick = () => {
-      document.querySelectorAll(".subcategory-btn").forEach((b) => b.classList.remove("selected"));
+      document
+        .querySelectorAll(".subcategory-btn")
+        .forEach((b) => b.classList.remove("selected"));
       btn.classList.add("selected");
       currentSubcategory = sub;
       startButton.classList.remove("hidden");
@@ -63,7 +64,6 @@ function loadSubcategories() {
   });
 }
 
-// --- Start Quiz ---
 startButton.addEventListener("click", startQuiz);
 
 function startQuiz() {
@@ -83,11 +83,11 @@ function startQuiz() {
   }
 }
 
-// --- Generate Question ---
 function generateQuestion() {
   if (!currentCategory || !currentSubcategory) return;
 
-  const questionData = quizData[currentCategory][currentSubcategory][currentQuestionIndex];
+  const questionData =
+    quizData[currentCategory][currentSubcategory][currentQuestionIndex];
 
   questionEl.textContent = questionData.question;
   const answers = new Set(questionData.options);
@@ -103,7 +103,6 @@ function generateQuestion() {
   });
 }
 
-// --- Handle Answer Logic ---
 function handleAnswer(isCorrect, btn) {
   btn.disabled = true;
 
@@ -133,7 +132,10 @@ function handleAnswer(isCorrect, btn) {
 
   setTimeout(() => {
     currentQuestionIndex++;
-    if (currentQuestionIndex < quizData[currentCategory][currentSubcategory].length) {
+    if (
+      currentQuestionIndex <
+      quizData[currentCategory][currentSubcategory].length
+    ) {
       generateQuestion();
     } else {
       alert("Quiz Completed!");
@@ -147,41 +149,43 @@ function handleAnswer(isCorrect, btn) {
   }, 1500);
 }
 
-// --- Update UI ---
 function updateUI() {
   streakCountEl.style.width = `${(streak / 10) * 100}%`;
   scoreEl.textContent = `Score: ${streak}`;
   livesCountEl.textContent = `Lives: ${tries}`;
 }
 
-// --- Reset Game ---
 function resetGame() {
-    currentCategory = "";
-    currentSubcategory = "";
-    currentQuestionIndex = 0;
-    streak = 0;
-    tries = 3;
-    consecutiveCorrect = 0;
-  
-    quizArea.classList.add("hidden");
-    document.getElementById("category-selection").classList.remove("hidden");
-    document.getElementById("game-over").classList.add("hidden");
-  
-    document.querySelectorAll(".category-btn").forEach(b => b.classList.remove("selected"));
-    document.querySelectorAll(".subcategory-btn").forEach(b => b.classList.remove("selected"));
-  
-    startButton.classList.add("hidden");
-    subcategoryList.classList.add("hidden");
-    choicesEl.innerHTML = "";
-    questionEl.textContent = "Question text goes here";
-    questionNumberEl.textContent = "Question 1";
-  
-    updateUI();
+  currentCategory = "";
+  currentSubcategory = "";
+  currentQuestionIndex = 0;
+  streak = 0;
+  tries = 3;
+  consecutiveCorrect = 0;
+
+  quizArea.classList.add("hidden");
+  document.getElementById("category-selection").classList.remove("hidden");
+  document.getElementById("game-over").classList.add("hidden");
+
+  document
+    .querySelectorAll(".category-btn")
+    .forEach((b) => b.classList.remove("selected"));
+  document
+    .querySelectorAll(".subcategory-btn")
+    .forEach((b) => b.classList.remove("selected"));
+
+  startButton.classList.add("hidden");
+  subcategoryList.classList.add("hidden");
+  choicesEl.innerHTML = "";
+  questionEl.textContent = "Question text goes here";
+  questionNumberEl.textContent = "Question 1";
+
+  updateUI();
 }
 
 const exitButton = document.createElement("button");
 exitButton.textContent = "Exit";
-exitButton.classList.add("score"); 
+exitButton.classList.add("score");
 exitButton.style.background = "#ef4444";
 exitButton.style.color = "white";
 exitButton.style.cursor = "pointer";
@@ -192,4 +196,3 @@ exitButton.onclick = () => {
   }
 };
 document.querySelector(".header").appendChild(exitButton);
-
