@@ -1,29 +1,135 @@
-const quizData = window.quizData;
-
 let currentCategory = "";
 let currentSubcategory = "";
-let currentQuestionIndex = 0;
-let tries = 3;
-let streak = 0;
-let consecutiveCorrect = 0;
 
-const maxLives = 3;
-const questionNumberEl = document.getElementById("questionNumber");
-const questionEl = document.getElementById("questionBox");
 const choicesEl = document.getElementById("choicesContainer");
-const streakCountEl = document.getElementById("streakBar");
-const scoreEl = document.getElementById("score");
 const startButton = document.getElementById("startButton");
 const subcategoryList = document.getElementById("subcategory-list");
-const quizArea = document.getElementById("quiz-area");
 const categoryCards = document.querySelectorAll(".category-card");
-const livesCountEl = document.getElementById("livesCount");
+const btnAbout = document.getElementById("about");
+const btnProfile = document.getElementById("profile");
+
+document.addEventListener("DOMContentLoaded", () => {
+  const loginBtn = document.getElementById("login-btn");
+  const usernameEl = document.querySelector(".username");
+  const userPreview = document.querySelector(".user-preview");
+
+  // Fetch user data from the backend (adjust PHP path as needed)
+  fetch("../user/get_user.php")
+    .then((response) => response.json())
+    .then((userData) => {
+      if (userData && userData.username) {
+        // If logged in, display the username
+        usernameEl.textContent = `@${userData.username}`;
+        loginBtn.classList.add("hiddn");
+
+        // Enable category selection
+        categoryCards.forEach((card) => {
+          card.style.pointerEvents = "auto";
+          card.style.opacity = "1";
+        });
+      } else {
+        // If not logged in, show the Register button
+        usernameEl.textContent = "@UserName";
+        loginBtn.classList.remove("hiddn");
+
+        // Disable category selection
+        categoryCards.forEach((card) => {
+          card.style.pointerEvents = "none";
+          card.style.opacity = "0.5";
+        });
+
+        // Block interaction with category area
+        document.querySelector(".categories").addEventListener("click", () => {
+          alert("Please register or log in before selecting a category.");
+        });
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching user data:", error);
+    });
+
+  // Redirect to login/register page when clicked
+  loginBtn.addEventListener("click", () => {
+    window.location.href = "../user/login.html";
+  });
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const categoryCards = document.querySelectorAll(".category-card");
+  const userPreview = document.querySelector(".user-preview");
+  const categoryH1 = document.getElementById("welcome");
+  let selectedCategory = null;
+
+  categoryCards.forEach((card) => {
+    card.addEventListener("click", () => {
+      if (selectedCategory === card) {
+        categoryCards.forEach((c) => {
+          c.classList.remove("hidden-category", "selected");
+        });
+        selectedCategory = null;
+        document.querySelector(".categories").classList.remove("single-row");
+        categoryH1.classList.add("hidden");
+        subcategoryList.classList.add("hidden");
+        startButton.classList.add("hidden");
+        userPreview.classList.remove("hidden");
+      } else {
+        selectedCategory = card;
+        categoryCards.forEach((c) => {
+          if (c === card) {
+            c.classList.remove("hidden-category");
+            c.classList.add("selected");
+          } else {
+            c.classList.add("hidden-category");
+            c.classList.remove("selected");
+          }
+        });
+
+        document.querySelector(".categories").classList.add("single-row");
+
+        const selectedName = card.getAttribute("data-category");
+        categoryH1.textContent = `Welcome to ${selectedName}`;
+        categoryH1.classList.remove("hidden");
+
+        userPreview.classList.add("hidden");
+      }
+    });
+  });
+});
+
+const subcategories = {
+  Math: [
+    { name: "Addition", image: "../../assets/add.png" },
+    { name: "Subtraction", image: "../../assets/subtract.png" },
+    { name: "Multiplication", image: "../../assets/multiply.png" },
+    { name: "Division", image: "../../assets/divide.png" },
+  ],
+  Science: [
+    { name: "Astronomy", image: "../assets/astronomy.png" },
+    { name: "Experiments", image: "../assets/experiements.png" },
+    { name: "Biology", image: "../assets/biology.png" },
+    { name: "Geography", image: "../assets/geography.png" },
+  ],
+  Vocabulary: [
+    { name: "Reading", image: "../assets/reading.png" },
+    { name: "Writing", image: "../assets/writing.png" },
+    { name: "Letters", image: "../assets/letters.png" },
+    { name: "Numbers", image: "../assets/numbers.png" },
+  ],
+  Filipino: [
+    { name: "History", image: "../assets/history.png" },
+    { name: "Heroes", image: "../assets/heroes.png" },
+    { name: "Presidents", image: "../assets/president.png" },
+    { name: "Grammar", image: "../assets/grammar.png" },
+  ],
+};
 
 categoryCards.forEach((button) => {
   button.addEventListener("click", () => {
     categoryCards.forEach((b) => b.classList.remove("selected"));
     button.classList.add("selected");
     currentCategory = button.getAttribute("data-category");
+    console.log(`Current Category: ${currentCategory}`);
     loadSubcategories();
     subcategoryList.classList.remove("hidden");
     startButton.classList.remove("hidden");
@@ -31,29 +137,13 @@ categoryCards.forEach((button) => {
 });
 
 function loadSubcategories() {
-  const subcategories = {
-    Math: [
-      { name: "Addition", image: "../../assets/add.png" },
-      { name: "Subtraction", image: "../../assets/add.png" },
-      { name: "Multiplication", image: "../../assets/add.png" },
-      { name: "Division", image: "../../assets/add.png" },
-    ],
-    Science: [
-      { name: "Astronomy", image: "../../assets/astronomy.png" },
-      { name: "Experiments", image: "../../assets/experiements.png" },
-      { name: "Biology", image: "../../assets/biology.png" },
-      { name: "Geography", image: "../../assets/geography.png" },
-    ],
-    Vocabulary: [
-      { name: "Reading", image: "../../assets/reading.png" },
-      { name: "Writing", image: "../../assets/writing.png" },
-      { name: "Letters", image: "../../assets/letters.png" },
-      { name: "Numbers", image: "../../assets/numbers.png" },
-    ],
-  };
-
   currentSubcategory = "";
   subcategoryList.innerHTML = "";
+
+  if (!subcategories[currentCategory]) {
+    console.error(`No subcategories found for category: "${currentCategory}"`);
+    return;
+  }
 
   subcategories[currentCategory].forEach((sub) => {
     const card = document.createElement("div");
@@ -63,9 +153,13 @@ function loadSubcategories() {
     card.dataset.subcategory = sub.name;
 
     const label = document.createElement("div");
-    label.className = "category-label";
+    label.className = "category-list";
     label.textContent = sub.name;
-    card.appendChild(label);
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "subcategory-wrapper";
+    wrapper.appendChild(card);
+    wrapper.appendChild(label);
 
     card.onclick = () => {
       document
@@ -73,149 +167,63 @@ function loadSubcategories() {
         .forEach((b) => b.classList.remove("selected"));
       card.classList.add("selected");
       currentSubcategory = sub.name;
+      console.log(
+        `Selected Category: ${currentCategory}, Subcategory: ${currentSubcategory}`
+      );
+
+      window.userSelected = {
+        currentCategory,
+        currentSubcategory,
+      };
+
+      if (
+        quizData &&
+        quizData[currentCategory] &&
+        quizData[currentCategory][currentSubcategory]
+      ) {
+        const questions = shuffleArray(
+          quizData[currentCategory][currentSubcategory]
+        ).slice(0, 10);
+        console.log(questions);
+
+        localStorage.setItem("quizQuestions", JSON.stringify(questions));
+      } else {
+        alert("No questions found for this category.");
+      }
+
       startButton.classList.remove("hidden");
     };
 
-    subcategoryList.appendChild(card);
+    subcategoryList.appendChild(wrapper);
   });
 }
 
-startButton.addEventListener("click", startQuiz);
+function shuffleArray(array) {
+  return array.sort(() => Math.random() - 0.5);
+}
 
 function startQuiz() {
-  if (currentCategory && currentSubcategory && window.quizData) {
-    document.getElementById("category-selection").classList.add("hidden");
-    quizArea.classList.remove("hidden");
-
-    currentQuestionIndex = 0;
-    tries = maxLives;
-    streak = 0;
-    consecutiveCorrect = 0;
-
-    updateUI();
-    generateQuestion();
-  } else if (!window.quizData) {
-    alert("Quiz data is still loading. Please wait.");
+  if (currentCategory && currentSubcategory) {
+    localStorage.setItem(
+      "userSelected",
+      JSON.stringify({
+        currentCategory,
+        currentSubcategory,
+      })
+    );
+    window.location.href = "../game/game.html";
   } else {
     alert("Please select both Category and Sub-category.");
   }
 }
 
-function generateQuestion() {
-  const questions = quizData[currentCategory][currentSubcategory];
+startButton.addEventListener("click", startQuiz);
 
-  if (!questions || questions.length === 0) {
-    questionEl.textContent = "No questions available.";
-    return;
-  }
+btnAbout.addEventListener("click", function () {
+  window.location.href = "../about/about.html";
+});
 
-  const questionData = questions[Math.floor(Math.random() * questions.length)];
+btnProfile.addEventListener("click", function () {
+  window.location.href = "../profile/profile.html";
+});
 
-  questionEl.textContent = questionData.question;
-
-  const shuffledOptions = [...questionData.options];
-  for (let i = shuffledOptions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffledOptions[i], shuffledOptions[j]] = [
-      shuffledOptions[j],
-      shuffledOptions[i],
-    ];
-  }
-
-  const correctAnswer = questionData.correctAnswer;
-
-  choicesEl.innerHTML = "";
-  shuffledOptions.forEach((answer) => {
-    const btn = document.createElement("button");
-    btn.classList.add("choice-btn");
-    btn.textContent = answer;
-    btn.dataset.correct = answer === correctAnswer;
-    btn.onclick = () => handleAnswer(answer === correctAnswer, btn);
-    choicesEl.appendChild(btn);
-  });
-
-  updateUI();
-}
-
-function handleAnswer(isCorrect, btn) {
-  const allButtons = choicesEl.querySelectorAll(".choice-btn");
-  allButtons.forEach((b) => (b.disabled = true));
-
-  if (isCorrect) {
-    btn.classList.add("correct");
-    streak++;
-    consecutiveCorrect++;
-
-    if (consecutiveCorrect === 2 && tries < maxLives) {
-      tries++;
-      consecutiveCorrect = 0;
-    }
-  } else {
-    btn.classList.add("incorrect");
-    streak = Math.max(0, streak - 1);
-    tries--;
-    consecutiveCorrect = 0;
-
-    const correctAnswerButton = choicesEl.querySelector(
-      `.choice-btn:not(.disabled)[data-correct="true"]`
-    );
-    setTimeout(() => {
-      if (correctAnswerButton) {
-        correctAnswerButton.classList.add("correct-revealed");
-      }
-    }, 1200);
-
-    if (correctAnswerButton) {
-      correctAnswerButton.classList.add("correct-revealed");
-    }
-  }
-  
-  if (tries <= 0) { 
-    alert("Game Over! You ran out of lives.");
-    resetGame();
-    return;
-}
-
-  updateUI();
-
-  setTimeout(() => { 
-    currentQuestionIndex++;
-    if (currentQuestionIndex < quizData[currentCategory][currentSubcategory].length) {
-        generateQuestion();
-    }
-}, 1200);
-}
-
-function updateUI() {
-  streakCountEl.style.width = `${Math.min(streak, 10) * 10}%`;
-  scoreEl.textContent = `Score: ${streak}`;
-  livesCountEl.textContent = `Lives: ${tries}`;
-  questionNumberEl.textContent = `Question ${currentQuestionIndex + 1}`;
-}
-
-function resetGame() {
-  currentCategory = "";
-  currentSubcategory = "";
-  currentQuestionIndex = 0;
-  streak = 0;
-  tries = maxLives;
-  consecutiveCorrect = 0;
-
-  quizArea.classList.add("hidden");
-  document.getElementById("category-selection").classList.remove("hidden");
-
-  document
-    .querySelectorAll(".category-card")
-    .forEach((b) => b.classList.remove("selected"));
-  document
-    .querySelectorAll(".subcategory-btn")
-    .forEach((b) => b.classList.remove("selected"));
-
-  startButton.classList.add("hidden");
-  subcategoryList.classList.add("hidden");
-  choicesEl.innerHTML = "";
-  questionEl.textContent = "Question text goes here";
-  questionNumberEl.textContent = "Question 1";
-
-  updateUI();
-}
